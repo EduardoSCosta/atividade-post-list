@@ -1,0 +1,7 @@
+.post {
+  margin: var(--space-md);
+}
+
+.post__title {
+  text-transform: capitalize;
+}
