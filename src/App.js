@@ -1,25 +1,25 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from './api';
 import Post from './components/Post';
 
-function App() {
-  const TOTAL_POSTS = 95;
-  const PAGE_DEFAULT_LIMIT = 20;
-  const PAGE_LINK = 'https://jsonplaceholder.typicode.com/posts';
+const TOTAL_POSTS = 95;
+const PAGE_DEFAULT_LIMIT = 20;
+
+function App({ totalPosts = TOTAL_POSTS, pageLimit = PAGE_DEFAULT_LIMIT }) {
 
   const [posts, setPosts] = useState([]);
 
   const pagination = () => {
-    const totalPages = Math.floor(TOTAL_POSTS / PAGE_DEFAULT_LIMIT);
-    const lastPageLimit = TOTAL_POSTS % PAGE_DEFAULT_LIMIT;
+    const totalPages = Math.floor(totalPosts / pageLimit);
+    const lastPageLimit = totalPosts % pageLimit;
 
-    return [...new Array(totalPages).fill(PAGE_DEFAULT_LIMIT), lastPageLimit];
+    return [...new Array(totalPages).fill(pageLimit), lastPageLimit];
   };
 
-  const getCurrentPagePosts = ({ index, currentPageLimit }) => () => {
-    return axios.get(PAGE_LINK, {
+  const getCurrentPagePosts = (index, currentPageLimit) => () => {
+    return api.get('posts', {
       params: {
-        _start: index * PAGE_DEFAULT_LIMIT,
+        _start: index * pageLimit,
         _limit: currentPageLimit
       }
     })
@@ -29,14 +29,30 @@ function App() {
       });
   }
 
+  const getPostsComments = (postId) => () => {
+    return api.get(`posts/${postId}/comments`)
+      .then((response) => response.data)
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+
   const getAllPosts = () => {
     return pagination().reduce((currentPosts, currentPageLimit, index) => {
-      const newPostsList = getCurrentPagePosts({ index, currentPageLimit });
+      const newPostsList = getCurrentPagePosts(index, currentPageLimit);
 
-      return currentPosts.then((previousPosts) => newPostsList()
+      const addComments = newPostsList().then((response) => {
+        return Promise.all(response.map(post => {
+          const comments = getPostsComments(post.id);
+
+          return comments().then((response) => { return { ...post, comments: response } });
+        }))
+      });
+
+      return currentPosts.then((previousPosts) => addComments
         .then((newPosts) => [...previousPosts, ...newPosts]));
     }, Promise.resolve([]))
-    .then(setPosts);
+      .then(setPosts);
   }
 
   useEffect(() => {
@@ -46,6 +62,7 @@ function App() {
   return (
     <>
       <h1 className='title'>Post List</h1>
+      {posts.length === 0 && <h1>Loading...</h1>}
       {posts.map(post => <Post key={post.id} post={post} />)}
     </>
   );
