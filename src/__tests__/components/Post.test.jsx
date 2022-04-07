@@ -5,14 +5,20 @@ describe('<Post />', () => {
   describe('When the component is rendered', () => {
     const post = {
       title: 'post title',
-      body: 'post body'
+      body: 'post body',
+      comments: [{
+        id: 1,
+        email: 'email@test.com',
+        name: 'user test',
+        body: 'comment test'
+      }]
     }
 
     it('should show the post title passed in props', () => {
       render(<Post post={post} />)
 
       const postTitleElement = screen.getByRole('heading', { name: /post title/i });
-      
+
       expect(postTitleElement).toBeInTheDocument();
     });
 
@@ -20,7 +26,7 @@ describe('<Post />', () => {
       render(<Post post={post} />)
 
       const postBodyElement = screen.getByText(/post body/i);
-      
+
       expect(postBodyElement).toBeInTheDocument();
     });
   });
