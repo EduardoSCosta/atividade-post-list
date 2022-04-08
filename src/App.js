@@ -37,12 +37,20 @@ function App({ totalPosts = TOTAL_POSTS, pageLimit = PAGE_DEFAULT_LIMIT }) {
       });
   }
 
+  const getUser = (userId) => () => {
+    return api.get(`users/${userId}`)
+      .then((response) => response.data)
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+
   const getAllPosts = () => {
     return pagination().reduce((currentPosts, currentPageLimit, index) => {
       const newPostsList = getCurrentPagePosts(index, currentPageLimit);
 
       const addComments = newPostsList().then((response) => {
-        return Promise.all(response.map(post => {
+        return Promise.all(response.map((post) => {
           const comments = getPostsComments(post.id);
 
           return comments().then((response) => { return { ...post, comments: response } });
@@ -52,6 +60,21 @@ function App({ totalPosts = TOTAL_POSTS, pageLimit = PAGE_DEFAULT_LIMIT }) {
       return currentPosts.then((previousPosts) => addComments
         .then((newPosts) => [...previousPosts, ...newPosts]));
     }, Promise.resolve([]))
+      .then((posts) => {
+        const usersIds = [...new Set(posts.map((post) => { return post.userId; }))];
+
+        const users = Promise.all(usersIds.map(userId => {
+          const user = getUser(userId);
+
+          return user().then((response) => response);
+        }))
+
+        return users.then(users => {
+          return posts.map(post => {
+            return { ...post, user: users.find(user => user.id === post.userId) }
+          })
+        })
+      })
       .then(setPosts);
   }
 
@@ -63,7 +86,7 @@ function App({ totalPosts = TOTAL_POSTS, pageLimit = PAGE_DEFAULT_LIMIT }) {
     <>
       <h1 className='title'>Post List</h1>
       {posts.length === 0 && <h1>Loading...</h1>}
-      {posts.map(post => <Post key={post.id} post={post} />)}
+      {posts.map((post) => <Post key={post.id} post={post} />)}
     </>
   );
 }
