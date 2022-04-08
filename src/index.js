@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
+import './styles/settings/_colors.css';
 import './styles/settings/_spaces.css';
 import './styles/generic/_box-sizing.css';
 import './styles/generic/_resets.css';

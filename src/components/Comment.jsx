@@ -1,9 +1,11 @@
+import '../styles/components/_comment.css';
+
 const Comment = ({ comment }) => {
   return (
-    <div>
-      <h3>{comment.email}</h3>
-      <h4>{comment.name}</h4>
-      <p>{comment.body}</p>
+    <div className='comment'>
+      <h3 className='comment__email'>{comment.email}</h3>
+      <h4 className='comment__name'>{comment.name}</h4>
+      <p className='comment__body'>{comment.body}</p>
     </div>
   )
 }
