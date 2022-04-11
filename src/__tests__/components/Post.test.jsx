@@ -6,6 +6,9 @@ describe('<Post />', () => {
     const post = {
       title: 'post title',
       body: 'post body',
+      user: {
+        name: 'test user'
+      },
       comments: [{
         id: 1,
         email: 'email@test.com',
